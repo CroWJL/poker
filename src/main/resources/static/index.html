@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>好友德州扑克</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0b3d0b;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        #table {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        #table-center {
+            flex: 2;
+            max-width: 640px;
+            background: radial-gradient(circle at center, #138f3e 0, #085020 60%, #042010 100%);
+            border-radius: 999px;
+            border: 3px solid rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            position: relative;
+            padding: 16px;
+            margin-right: 12px;
+            box-sizing: border-box;
+        }
+        #sidebar {
+            flex: 1;
+            min-width: 180px;
+            max-width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #community-cards {
+            position: absolute;
+            left: 50%;
+            top: 38%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 6px;
+        }
+        #seats {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        #player-me {
+            position: absolute;
+            left: 50%;
+            bottom: 6%;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+        #player-me .player {
+            pointer-events: auto;
+        }
+        .seat {
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .seat-pos-0 { /* 底部右侧 */
+            left: 78%;
+            top: 78%;
+        }
+        .seat-pos-1 { /* 右下 */
+            left: 92%;
+            top: 62%;
+        }
+        .seat-pos-2 { /* 右上 */
+            left: 92%;
+            top: 32%;
+        }
+        .seat-pos-3 { /* 顶部中间 */
+            left: 50%;
+            top: 14%;
+        }
+        .seat-pos-4 { /* 左上 */
+            left: 8%;
+            top: 32%;
+        }
+        .seat-pos-5 { /* 左下 */
+            left: 8%;
+            top: 62%;
+        }
+        .seat-pos-6 { /* 底部左侧 */
+            left: 22%;
+            top: 78%;
+        }
+        .card {
+            width: 44px;
+            height: 66px;
+            border-radius: 6px;
+            background: #fff;
+            color: #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-small {
+            width: 36px;
+            height: 54px;
+        }
+        .card-large {
+            width: 56px;
+            height: 84px;
+        }
+        .card-inner {
+            position: absolute;
+            inset: 4px;
+            border-radius: 4px;
+            background: radial-gradient(circle at 30% 20%, #ffffff, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-corner {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .card-corner-top {
+            left: 4px;
+            top: 2px;
+        }
+        .card-corner-bottom {
+            right: 4px;
+            bottom: 2px;
+            transform: rotate(180deg);
+        }
+        .card-center {
+            font-size: 20px;
+        }
+        .card-suit-red {
+            color: #d0021b;
+        }
+        .card-suit-black {
+            color: #111;
+        }
+        .card-back .card-inner {
+            background: repeating-linear-gradient(
+                    45deg,
+                    #004a7f,
+                    #004a7f 4px,
+                    #006bb3 4px,
+                    #006bb3 8px
+            );
+        }
+        .player {
+            min-width: 110px;
+            padding: 6px 8px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.45);
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .player.me {
+            border-color: #f5a623;
+            box-shadow: 0 0 10px rgba(245, 166, 35, 0.6);
+        }
+        #actions {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+        button {
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            background: #f5a623;
+            color: #000;
+            font-size: 13px;
+        }
+        button:disabled {
+            background: #777;
+            cursor: not-allowed;
+        }
+        #login-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #login-box {
+            background: #222;
+            padding: 16px;
+            border-radius: 8px;
+            width: 260px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            margin-bottom: 8px;
+            background: #111;
+            color: #fff;
+        }
+        #log {
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 11px;
+            padding: 6px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.45);
+        }
+        #sidebar-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #sidebar-section h4 {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        #pot {
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            #table {
+                flex-direction: column;
+            }
+            #table-center {
+                margin-right: 0;
+                margin-bottom: 12px;
+            }
+            .seat-pos-0 { left: 78%; top: 80%; }
+            .seat-pos-1 { left: 92%; top: 60%; }
+            .seat-pos-2 { left: 92%; top: 30%; }
+            .seat-pos-3 { left: 50%; top: 12%; }
+            .seat-pos-4 { left: 8%; top: 30%; }
+            .seat-pos-5 { left: 8%; top: 60%; }
+            .seat-pos-6 { left: 22%; top: 80%; }
+        }
+    </style>
+    <script src="/card-ui.js"></script>
+</head>
+<body>
+<header>
+    <div>好友德州扑克（单桌演示版）</div>
+    <div id="me-info">未登录</div>
+</header>
+
+<div id="table">
+    <div id="table-center">
+        <div id="community-cards"></div>
+        <div id="seats"></div>
+        <div id="player-me"></div>
+    </div>
+    <aside id="sidebar">
+        <div id="sidebar-section">
+            <h4>牌局信息</h4>
+            <div id="pot">底池：0</div>
+        </div>
+        <div>
+            <h4>操作</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <button id="btn-connect" disabled>连接中...</button>
+                <button id="btn-join" disabled>加入牌桌</button>
+                <button id="btn-start" disabled>开始一局</button>
+            </div>
+        </div>
+        <div>
+            <h4>系统消息</h4>
+            <div id="log"></div>
+        </div>
+    </aside>
+</div>
+
+<div id="login-modal">
+    <div id="login-box">
+        <h3>输入昵称</h3>
+        <input type="text" id="nickname" placeholder="例如：小明">
+        <button id="btn-login">登录</button>
+        <div id="login-error" style="color:#f66;font-size:12px;margin-top:4px;"></div>
+    </div>
+    </div>
+
+<script>
+    let me = null;
+    let socket = null;
+    let tableState = { players: [], communityCards: [], pot: 0 };
+
+    const meInfoEl = document.getElementById('me-info');
+    const communityEl = document.getElementById('community-cards');
+    const seatsEl = document.getElementById('seats');
+    const playerMeEl = document.getElementById('player-me');
+    const btnConnect = document.getElementById('btn-connect');
+    const btnJoin = document.getElementById('btn-join');
+    const btnStart = document.getElementById('btn-start');
+    const logEl = document.getElementById('log');
+
+    function log(msg) {
+        const line = document.createElement('div');
+        const time = new Date().toLocaleTimeString();
+        line.textContent = '[' + time + '] ' + msg;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function render() {
+        communityEl.innerHTML = '';
+        (tableState.communityCards || []).forEach(c => {
+            const el = window.CardUI
+                ? window.CardUI.createCardElement(c, { size: 'large' })
+                : (function () {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.textContent = c;
+                    return div;
+                })();
+            communityEl.appendChild(el);
+        });
+
+        seatsEl.innerHTML = '';
+        playerMeEl.innerHTML = '';
+
+        const players = tableState.players || [];
+        const selfHole = tableState.selfHoleCards || [];
+
+        const mePlayer = players.find(p => me && me.userId === p.userId);
+        const others = players.filter(p => !me || p.userId !== me.userId);
+
+        if (mePlayer) {
+            const seat = document.createElement('div');
+            seat.className = 'player me';
+            const name = document.createElement('div');
+            name.textContent = mePlayer.nickname;
+            const chip = document.createElement('div');
+            chip.textContent = '筹码：' + mePlayer.chipBalance;
+            const cardsBox = document.createElement('div');
+            cardsBox.style.marginTop = '4px';
+            cardsBox.style.display = 'flex';
+            cardsBox.style.gap = '4px';
+            (selfHole || []).forEach(code => {
+                const el = window.CardUI
+                    ? window.CardUI.createCardElement(code, { size: 'large' })
+                    : (function () {
+                        const d = document.createElement('div');
+                        d.className = 'card';
+                        d.textContent = code;
+                        return d;
+                    })();
+                cardsBox.appendChild(el);
+            });
+            seat.appendChild(name);
+            seat.appendChild(chip);
+            seat.appendChild(cardsBox);
+            playerMeEl.appendChild(seat);
+        }
+
+        // 其余玩家分配到 7 个预设座位，实现围绕桌子的效果
+        const maxSeats = 7;
+        const assigned = others.slice(0, maxSeats);
+        assigned.forEach((p, index) => {
+            const seat = document.createElement('div');
+            seat.className = 'player seat seat-pos-' + index;
+            const name = document.createElement('div');
+            name.textContent = p.nickname;
+            const chip = document.createElement('div');
+            chip.textContent = '筹码：' + p.chipBalance;
+            const cardsBox = document.createElement('div');
+            cardsBox.style.marginTop = '4px';
+            cardsBox.style.display = 'flex';
+            cardsBox.style.gap = '4px';
+            for (let i = 0; i < 2; i++) {
+                const el = window.CardUI
+                    ? window.CardUI.createCardElement('X♠', { size: 'small', facedown: true })
+                    : (function () {
+                        const d = document.createElement('div');
+                        d.className = 'card';
+                        d.textContent = '🂠';
+                        return d;
+                    })();
+                cardsBox.appendChild(el);
+            }
+            seat.appendChild(name);
+            seat.appendChild(chip);
+            seat.appendChild(cardsBox);
+            seatsEl.appendChild(seat);
+        });
+        document.getElementById('pot').textContent = '底池：' + (tableState.pot || 0);
+    }
+
+    function connectWebSocket() {
+        const loc = window.location;
+        const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = wsProtocol + '//' + loc.host + '/ws/poker';
+
+        socket = new WebSocket(url);
+        btnConnect.textContent = '连接中...';
+        btnConnect.disabled = true;
+
+        socket.onopen = () => {
+            log('WebSocket 已连接');
+            btnConnect.textContent = '已连接';
+            btnJoin.disabled = false;
+            btnStart.disabled = false;
+        };
+        socket.onclose = () => {
+            log('WebSocket 已断开');
+            btnConnect.textContent = '重新连接';
+            btnConnect.disabled = false;
+        };
+        socket.onerror = (e) => {
+            log('WebSocket 错误');
+            console.error(e);
+        };
+        socket.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'TABLE_STATE') {
+                tableState = msg.payload;
+                render();
+            } else if (msg.type === 'SHOWDOWN') {
+                const r = msg.payload;
+                log('公共牌：' + (r.communityCards || []).join(' '));
+                (r.results || []).forEach(item => {
+                    log(item.nickname + ' 手牌：' + (item.holeCards || []).join(' ') +
+                        '，牌型：' + item.handRank);
+                });
+            } else {
+                log('收到消息: ' + msg.type);
+            }
+        };
+    }
+
+    document.getElementById('btn-login').onclick = async () => {
+        const nickname = document.getElementById('nickname').value.trim();
+        const errEl = document.getElementById('login-error');
+        errEl.textContent = '';
+        if (!nickname) {
+            errEl.textContent = '昵称不能为空';
+            return;
+        }
+        try {
+            const resp = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname })
+            });
+            if (!resp.ok) {
+                throw new Error('登录失败: ' + resp.status);
+            }
+            const data = await resp.json();
+            me = data;
+            meInfoEl.textContent = me.nickname + ' | 筹码 ' + me.chipBalance;
+            document.getElementById('login-modal').style.display = 'none';
+            log('登录成功，userId=' + me.userId);
+            connectWebSocket();
+        } catch (e) {
+            console.error(e);
+            errEl.textContent = '登录失败，请稍后再试';
+        }
+    };
+
+    btnConnect.onclick = () => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            connectWebSocket();
+        }
+    };
+
+    btnJoin.onclick = () => {
+        if (!socket || socket.readyState !== WebSocket.OPEN || !me) {
+            return;
+        }
+        const msg = {
+            type: 'JOIN_TABLE',
+            payload: {
+                userId: me.userId,
+                nickname: me.nickname,
+                chipBalance: me.chipBalance
+            }
+        };
+        socket.send(JSON.stringify(msg));
+        log('已发送 JOIN_TABLE');
+    };
+
+    btnStart.onclick = () => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        const msg = { type: 'START_HAND', payload: {} };
+        socket.send(JSON.stringify(msg));
+        log('已发送 START_HAND');
+    };
+</script>
+</body>
+</html>
+
