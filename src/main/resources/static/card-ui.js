@@ -32,25 +32,22 @@
         inner.className = 'card-inner';
         root.appendChild(inner);
 
+        // 极简牌面：只保留两个角标
+        // - 左上角：点数（例如 A / K / 10）
+        // - 右下角：花色（♠/♥/♦/♣）
         const cornerTop = document.createElement('div');
         cornerTop.className = 'card-corner card-corner-top';
-        cornerTop.textContent = rank + suit;
-
-        const center = document.createElement('div');
-        center.className = 'card-center';
-        center.textContent = suit;
+        cornerTop.textContent = (rank || '?') + (suit || '♠');
 
         const cornerBottom = document.createElement('div');
         cornerBottom.className = 'card-corner card-corner-bottom';
-        cornerBottom.textContent = rank + suit;
+        cornerBottom.textContent = suit || '♠';
 
         const colorClass = SUIT_COLOR_CLASS[suit] || 'card-suit-black';
         cornerTop.classList.add(colorClass);
-        center.classList.add(colorClass);
         cornerBottom.classList.add(colorClass);
 
         inner.appendChild(cornerTop);
-        inner.appendChild(center);
         inner.appendChild(cornerBottom);
 
         if (opt.facedown) {

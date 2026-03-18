@@ -26,22 +26,19 @@
             flex: 1;
             display: flex;
             flex-direction: row;
-            align-items: stretch;
+            align-items: center;
             justify-content: center;
             padding: 12px;
             box-sizing: border-box;
+            gap: 16px;
+            min-height: 0;
         }
-        #table-center {
-            flex: 2;
-            max-width: 640px;
-            background: radial-gradient(circle at center, #138f3e 0, #085020 60%, #042010 100%);
-            border-radius: 999px;
-            border: 3px solid rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-            position: relative;
-            padding: 16px;
-            margin-right: 12px;
-            box-sizing: border-box;
+        #poker-table-mount {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #sidebar {
             flex: 1;
@@ -51,64 +48,10 @@
             flex-direction: column;
             gap: 8px;
         }
-        #community-cards {
-            position: absolute;
-            left: 50%;
-            top: 38%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 6px;
-        }
-        #seats {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-        }
-        #player-me {
-            position: absolute;
-            left: 50%;
-            bottom: 6%;
-            transform: translateX(-50%);
-            pointer-events: none;
-        }
-        #player-me .player {
-            pointer-events: auto;
-        }
-        .seat {
-            position: absolute;
-            transform: translate(-50%, -50%);
-        }
-        .seat-pos-0 { /* 底部右侧 */
-            left: 78%;
-            top: 78%;
-        }
-        .seat-pos-1 { /* 右下 */
-            left: 92%;
-            top: 62%;
-        }
-        .seat-pos-2 { /* 右上 */
-            left: 92%;
-            top: 32%;
-        }
-        .seat-pos-3 { /* 顶部中间 */
-            left: 50%;
-            top: 14%;
-        }
-        .seat-pos-4 { /* 左上 */
-            left: 8%;
-            top: 32%;
-        }
-        .seat-pos-5 { /* 左下 */
-            left: 8%;
-            top: 62%;
-        }
-        .seat-pos-6 { /* 底部左侧 */
-            left: 22%;
-            top: 78%;
-        }
         .card {
             width: 44px;
             height: 66px;
+            --card-h: 66px;
             border-radius: 6px;
             background: #fff;
             color: #000;
@@ -119,36 +62,38 @@
         .card-small {
             width: 36px;
             height: 54px;
+            --card-h: 54px;
         }
         .card-large {
             width: 56px;
             height: 84px;
+            --card-h: 84px;
         }
         .card-inner {
             position: absolute;
             inset: 4px;
             border-radius: 4px;
             background: radial-gradient(circle at 30% 20%, #ffffff, #f0f0f0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            /* 角标定位的参照容器 */
+            display: block;
         }
         .card-corner {
             position: absolute;
-            font-size: 11px;
-            font-weight: 600;
+            font-weight: 800;
+            line-height: 1;
+            user-select: none;
         }
         .card-corner-top {
             left: 4px;
             top: 2px;
+            /* 左上角：点数+花色，至少占牌高 1/4 */
+            font-size: calc(var(--card-h) * 0.25);
         }
         .card-corner-bottom {
             right: 4px;
             bottom: 2px;
-            transform: rotate(180deg);
-        }
-        .card-center {
-            font-size: 20px;
+            /* 右下角：大花色，至少占牌高 1/2 */
+            font-size: calc(var(--card-h) * 0.5);
         }
         .card-suit-red {
             color: #d0021b;
@@ -164,19 +109,6 @@
                     #006bb3 4px,
                     #006bb3 8px
             );
-        }
-        .player {
-            min-width: 110px;
-            padding: 6px 8px;
-            border-radius: 16px;
-            background: rgba(0, 0, 0, 0.45);
-            text-align: center;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .player.me {
-            border-color: #f5a623;
-            box-shadow: 0 0 10px rgba(245, 166, 35, 0.6);
         }
         #actions {
             padding: 8px;
@@ -247,21 +179,16 @@
         @media (max-width: 768px) {
             #table {
                 flex-direction: column;
+                align-items: center;
             }
-            #table-center {
-                margin-right: 0;
-                margin-bottom: 12px;
+            #poker-table-mount {
+                width: 100%;
+                max-width: 480px;
             }
-            .seat-pos-0 { left: 78%; top: 80%; }
-            .seat-pos-1 { left: 92%; top: 60%; }
-            .seat-pos-2 { left: 92%; top: 30%; }
-            .seat-pos-3 { left: 50%; top: 12%; }
-            .seat-pos-4 { left: 8%; top: 30%; }
-            .seat-pos-5 { left: 8%; top: 60%; }
-            .seat-pos-6 { left: 22%; top: 80%; }
         }
     </style>
     <script src="/card-ui.js"></script>
+    <script src="/poker-table.js"></script>
 </head>
 <body>
 <header>
@@ -270,11 +197,7 @@
 </header>
 
 <div id="table">
-    <div id="table-center">
-        <div id="community-cards"></div>
-        <div id="seats"></div>
-        <div id="player-me"></div>
-    </div>
+    <div id="poker-table-mount"></div>
     <aside id="sidebar">
         <div id="sidebar-section">
             <h4>牌局信息</h4>
@@ -310,9 +233,9 @@
     let tableState = { players: [], communityCards: [], pot: 0 };
 
     const meInfoEl = document.getElementById('me-info');
-    const communityEl = document.getElementById('community-cards');
-    const seatsEl = document.getElementById('seats');
-    const playerMeEl = document.getElementById('player-me');
+    const pokerTable = window.PokerTable
+        ? window.PokerTable.mount(document.getElementById('poker-table-mount'))
+        : null;
     const btnConnect = document.getElementById('btn-connect');
     const btnJoin = document.getElementById('btn-join');
     const btnStart = document.getElementById('btn-start');
@@ -327,88 +250,14 @@
     }
 
     function render() {
-        communityEl.innerHTML = '';
-        (tableState.communityCards || []).forEach(c => {
-            const el = window.CardUI
-                ? window.CardUI.createCardElement(c, { size: 'large' })
-                : (function () {
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.textContent = c;
-                    return div;
-                })();
-            communityEl.appendChild(el);
-        });
-
-        seatsEl.innerHTML = '';
-        playerMeEl.innerHTML = '';
-
-        const players = tableState.players || [];
-        const selfHole = tableState.selfHoleCards || [];
-
-        const mePlayer = players.find(p => me && me.userId === p.userId);
-        const others = players.filter(p => !me || p.userId !== me.userId);
-
-        if (mePlayer) {
-            const seat = document.createElement('div');
-            seat.className = 'player me';
-            const name = document.createElement('div');
-            name.textContent = mePlayer.nickname;
-            const chip = document.createElement('div');
-            chip.textContent = '筹码：' + mePlayer.chipBalance;
-            const cardsBox = document.createElement('div');
-            cardsBox.style.marginTop = '4px';
-            cardsBox.style.display = 'flex';
-            cardsBox.style.gap = '4px';
-            (selfHole || []).forEach(code => {
-                const el = window.CardUI
-                    ? window.CardUI.createCardElement(code, { size: 'large' })
-                    : (function () {
-                        const d = document.createElement('div');
-                        d.className = 'card';
-                        d.textContent = code;
-                        return d;
-                    })();
-                cardsBox.appendChild(el);
-            });
-            seat.appendChild(name);
-            seat.appendChild(chip);
-            seat.appendChild(cardsBox);
-            playerMeEl.appendChild(seat);
+        if (pokerTable) {
+            pokerTable.render(tableState, me);
         }
-
-        // 其余玩家分配到 7 个预设座位，实现围绕桌子的效果
-        const maxSeats = 7;
-        const assigned = others.slice(0, maxSeats);
-        assigned.forEach((p, index) => {
-            const seat = document.createElement('div');
-            seat.className = 'player seat seat-pos-' + index;
-            const name = document.createElement('div');
-            name.textContent = p.nickname;
-            const chip = document.createElement('div');
-            chip.textContent = '筹码：' + p.chipBalance;
-            const cardsBox = document.createElement('div');
-            cardsBox.style.marginTop = '4px';
-            cardsBox.style.display = 'flex';
-            cardsBox.style.gap = '4px';
-            for (let i = 0; i < 2; i++) {
-                const el = window.CardUI
-                    ? window.CardUI.createCardElement('X♠', { size: 'small', facedown: true })
-                    : (function () {
-                        const d = document.createElement('div');
-                        d.className = 'card';
-                        d.textContent = '🂠';
-                        return d;
-                    })();
-                cardsBox.appendChild(el);
-            }
-            seat.appendChild(name);
-            seat.appendChild(chip);
-            seat.appendChild(cardsBox);
-            seatsEl.appendChild(seat);
-        });
         document.getElementById('pot').textContent = '底池：' + (tableState.pot || 0);
     }
+
+    // 首屏先渲染一个空牌桌（未登录/未连接时也可见）
+    render();
 
     function connectWebSocket() {
         const loc = window.location;
